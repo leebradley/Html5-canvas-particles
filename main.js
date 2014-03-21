@@ -14,6 +14,12 @@ var POSITION = "center";
 var RANDOM_COLOR = 0;
 var VELOCITY = 2;
 var MAX_VELOCITY = 20;
+var VELOCITY_DEVIATION = 0;
+var MAX_VELOCITY_DEVIATION = 10;
+var DIRECTION = 0;
+var MAX_DIRECTION = 360;
+var DIRECTION_DEVIATION = 0;
+var MAX_DIRECTION_DEVIATION = 180;
 var BACK_COLOR= '#333333';
 var MAX_SIZE = 20;
 var MAX_STROKE_SIZE = 10;
@@ -40,6 +46,9 @@ var ParticleGUI = function() {
   this.position = POSITION;
   this.random_color = RANDOM_COLOR;
   this.velocity = VELOCITY;
+  this.velocity_deviation = VELOCITY_DEVIATION;
+  this.direction = DIRECTION;
+  this.direction_deviation = DIRECTION_DEVIATION;
   this.backcolor = BACK_COLOR;
   this.stroke_size = STROKE_SIZE;
   this.stroke_color = STROKE_COLOR;
@@ -66,6 +75,8 @@ function generate(type){
        POSITION:POSITION,
        RANDOM_COLOR:RANDOM_COLOR,
        VELOCITY:VELOCITY,
+       DIRECTION:DIRECTION,
+       DIRECTION_DEVIATION:DIRECTION_DEVIATION,
        BACK_COLOR:BACK_COLOR,
        MAX_SIZE:MAX_SIZE,
        STROKE_SIZE:STROKE_SIZE,
@@ -101,9 +112,21 @@ window.onload = function() {
   controller_position.onChange(function(value){
        POSITION = value;
   });
-  var controller_velocity = gui.add(text, 'velocity', 1, MAX_VELOCITY);
+  var controller_velocity = gui.add(text, 'velocity', 0, MAX_VELOCITY);
   controller_velocity.onFinishChange(function(value) {
       VELOCITY = Math.round(value);
+  });
+  var controller_velocitydeviation = gui.add(text, 'velocity_deviation', 0, MAX_VELOCITY_DEVIATION);
+  controller_velocitydeviation.onFinishChange(function(value) {
+      VELOCITY_DEVIATION = Math.round(value);
+  });
+  var controller_direction = gui.add(text, 'direction', 0, MAX_DIRECTION);
+  controller_direction.onFinishChange(function(value) {
+      DIRECTION = Math.round(value);
+  });
+  var controller_directiondeviation = gui.add(text, 'direction_deviation', 0, MAX_DIRECTION_DEVIATION);
+  controller_directiondeviation.onFinishChange(function(value) {
+      DIRECTION_DEVIATION = Math.round(value);
   });
   var controller_back_color = gui.addColor(text, 'backcolor', BACK_COLOR);
   controller_back_color.onChange(function(value){
@@ -181,8 +204,14 @@ function createParticle(){
     break;
   }
 
-  particle.xSpeed = randomRange( (-1) * VELOCITY , VELOCITY);
-  particle.ySpeed = randomRange( (-1) * VELOCITY , VELOCITY);
+  var iDirection = randomRange(DIRECTION - DIRECTION_DEVIATION, DIRECTION + DIRECTION_DEVIATION),
+    degreesToRadians = Math.PI / 180,
+    xDir = Math.cos(iDirection * degreesToRadians),
+    yDir = Math.sin(iDirection * degreesToRadians),
+    velocity = randomRange(VELOCITY, VELOCITY + VELOCITY_DEVIATION);
+
+  particle.xSpeed = xDir * velocity;
+  particle.ySpeed = yDir * velocity;
 
   var size;
   if(RANDOM_SIZE==1){
