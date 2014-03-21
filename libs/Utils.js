@@ -14,18 +14,3 @@ function hexToB(h) {
 function cutHex(h) {
 	return (h.charAt(0)=="#") ? h.substring(1,7):h;
 }
-function postwith (to,p) {
-  var myForm = document.createElement("form");
-  myForm.method="post" ;
-  myForm.action = to ;
-  myForm.target="_blank";
-  for (var k in p) {
-    var myInput = document.createElement("input") ;
-    myInput.setAttribute("name", k) ;
-    myInput.setAttribute("value", p[k]);
-    myForm.appendChild(myInput) ;
-  }
-  document.body.appendChild(myForm) ;
-  myForm.submit() ;
-  document.body.removeChild(myForm) ;
-}

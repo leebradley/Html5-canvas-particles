@@ -1,178 +1,185 @@
-
 /**
 * @projectDescription   Canvas Particles Test
 *
 * @author   Diego Vilariño - http://www.ensegundoplano.com - @ensegundoplano - http://www.sond3.com
 * @version  0.1
 */
+var MAX_PARTICLES = 500,
+   MAX_SPAWNRATE = 100,
+   MAX_VELOCITY = 30,
+   MAX_ACCELERATION = 1.5,
+   MAX_VELOCITY_DEVIATION = 15,
+   MAX_DEGREE = 360,
+   MAX_DEGREE_DEVIATION = 180,
+   MAX_SIZE = 100,
+   MAX_STROKE_SIZE = 10,
 
-var MAX_PARTICLES = 500;
-var NOW_PARTICLES = 50;
-var COLOR = "#ffae23";
-var TYPE_PARTICLE = "circle";
-var POSITION = "center";
-var RANDOM_COLOR = 0;
-var VELOCITY = 2;
-var MAX_VELOCITY = 20;
-var VELOCITY_DEVIATION = 0;
-var MAX_VELOCITY_DEVIATION = 10;
-var DIRECTION = 0;
-var MAX_DIRECTION = 360;
-var DIRECTION_DEVIATION = 0;
-var MAX_DIRECTION_DEVIATION = 180;
-var BACK_COLOR= '#333333';
-var MAX_SIZE = 20;
-var MAX_STROKE_SIZE = 10;
-var STROKE_SIZE = 0;
-var STROKE_COLOR = '#ffffff';
-var OPACITY = 1;
-var RANDOM_SIZE = false;
-var PARTICLE_SIZE = 5;
-var DEAD_PARTICLE = true;
-var SHADOW_BLUR = 0;
+   configDefault = {
+      particles: 50,
+      spawnrate: 1,
+      color: "#ffae23",
+      shape: "circle",
+      position: "center",
+      random_color: 0,
+      velocity: 0,
+      velocity_deviation: 2,
+      acceleration: 0.0,
+      direction_accel: 0,
+      direction: 0,
+      direction_deviation: 180,
+      back_color: '#333333',
+      stroke_size: 0,
+      stroke_color: '#ffffff',
+      opacity: 1,
+      random_size: false,
+      size: 5,
+      particle_dead: true,
+      shadow_blur: 0
+   },
 
-var mousePosX = window.innerWidth/2;
-var mousePosY = window.innerHeight/2;
-var degreesToRadians = (Math.PI / 180);
-var stats;
-var canvas;
-var c;
-var particleArray = [];
+   config,
 
+   mousePosX = window.innerWidth / 2,
+   mousePosY = window.innerHeight / 2,
 
-var ParticleGUI = function() {
-  this.particles = NOW_PARTICLES;
-  this.color = COLOR;
-  this.type = TYPE_PARTICLE;
-  this.position = POSITION;
-  this.random_color = RANDOM_COLOR;
-  this.velocity = VELOCITY;
-  this.velocity_deviation = VELOCITY_DEVIATION;
-  this.direction = DIRECTION;
-  this.direction_deviation = DIRECTION_DEVIATION;
-  this.backcolor = BACK_COLOR;
-  this.stroke_size = STROKE_SIZE;
-  this.stroke_color = STROKE_COLOR;
-  this.opacity =  OPACITY;
-  this.size = PARTICLE_SIZE;
-  this.random_size = RANDOM_SIZE;
-  this.particle_dead = DEAD_PARTICLE;
-  this.shadow_blur = SHADOW_BLUR;
-  this.Export = function() {
-    generate(1);
-  };
-  this.Preview = function() {
-    generate(0);
-  };
+   degreesToRadians = (Math.PI / 180),
+   stats,
+   canvas,
+   c,
+   particleArray = [];
+
+var ParticleGUI = function (config) {
+   this.particles = config.particles;
+   this.spawnrate = config.spawnrate;
+   this.color = config.color;
+   this.shape = config.shape;
+   this.position = config.position;
+   this.random_color = config.random_color;
+   this.velocity = config.velocity;
+   this.velocity_deviation = config.velocity_deviation;
+   this.direction = config.direction;
+   this.direction_deviation = config.direction_deviation;
+   this.acceleration = config.acceleration;
+   this.direction_accel = config.direction_accel;
+   this.backcolor = config.back_color;
+   this.stroke_size = config.stroke_size;
+   this.stroke_color = config.stroke_color;
+   this.opacity =  config.opacity;
+   this.size = config.size;
+   this.random_size = config.random_size;
+   this.particle_dead = config.particle_dead;
+   this.shadow_blur = config.shadow_blur;
+   this.Share = function () {
+      window.open('index.html?' + JSURL.stringify(config));
+   };
+   this.Export = function () {
+      window.open('export.php?' + JSURL.stringify(config));
+   };
 };
 
-function generate(type){
-  postwith('export.php',{
-       TYPE:type,
-       MAX_PARTICLES:MAX_PARTICLES,
-       NOW_PARTICLES:NOW_PARTICLES,
-       COLOR:COLOR,
-       TYPE_PARTICLE:TYPE_PARTICLE,
-       POSITION:POSITION,
-       RANDOM_COLOR:RANDOM_COLOR,
-       VELOCITY:VELOCITY,
-       DIRECTION:DIRECTION,
-       DIRECTION_DEVIATION:DIRECTION_DEVIATION,
-       BACK_COLOR:BACK_COLOR,
-       MAX_SIZE:MAX_SIZE,
-       STROKE_SIZE:STROKE_SIZE,
-       STROKE_COLOR:STROKE_COLOR,
-       OPACITY:OPACITY,
-       RANDOM_SIZE:RANDOM_SIZE,
-       PARTICLE_SIZE:PARTICLE_SIZE,
-       DEAD_PARTICLE:DEAD_PARTICLE,
-       SHADOW_BLUR:SHADOW_BLUR
-    });
-}
-
 window.onload = function() {
-  var text = new ParticleGUI();
-  var gui = new dat.GUI();
-  var controller_particules = gui.add(text, 'particles', 1, MAX_PARTICLES);
-  controller_particules.onChange(function(value) {
-      NOW_PARTICLES = Math.round(value);
-  });
+   var search = window.export_search || location.search.substr(1),
+      params = decodeURIComponent(search),
+      parsed = JSURL.parse(params),
+      datGui = new dat.GUI(),
+      pGui;
+   
+   config = $.extend({}, configDefault, parsed);
+   pGui = new ParticleGUI(config);
 
-  var controller_type = gui.add(text, 'type', { Rect: 'rect', Circle: 'circle', Triangle:'triangle'} );
-  controller_type.onChange(function(value){
-       TYPE_PARTICLE = value;
-  });
-  var controller_position = gui.add(text, 'position', { Mouse: 'mouse', Center: 'center', Random: 'random'} );
-  controller_position.onChange(function(value){
-       POSITION = value;
-  });
+   var controller_particules = datGui.add(pGui, 'particles', 1, MAX_PARTICLES);
+   controller_particules.onChange(function(value) {
+      config.particles = Math.round(value);
+   });
 
-  var folder_speeddir = gui.addFolder("Speed and Direction");
-  var controller_velocity = folder_speeddir.add(text, 'velocity', 0, MAX_VELOCITY);
-  controller_velocity.onChange(function(value) {
-      VELOCITY = Math.round(value);
-  });
-  var controller_velocitydeviation = folder_speeddir.add(text, 'velocity_deviation', 0, MAX_VELOCITY_DEVIATION);
-  controller_velocitydeviation.onChange(function(value) {
-      VELOCITY_DEVIATION = Math.round(value);
-  });
-  var controller_direction = folder_speeddir.add(text, 'direction', 0, MAX_DIRECTION);
-  controller_direction.onChange(function(value) {
-      DIRECTION = Math.round(value);
-  });
-  var controller_directiondeviation = folder_speeddir.add(text, 'direction_deviation', 0, MAX_DIRECTION_DEVIATION);
-  controller_directiondeviation.onChange(function(value) {
-      DIRECTION_DEVIATION = Math.round(value);
-  });
+   var controller_spawnrate = datGui.add(pGui, 'spawnrate', 1, MAX_SPAWNRATE);
+   controller_spawnrate.onChange(function(value) {
+      config.spawnrate = Math.round(value);
+   });
 
-  var controller_size_rand = gui.add(text, 'random_size');
-  controller_size_rand.onChange(function(value){
-       RANDOM_SIZE = value;
-  });
-  var controller_size = gui.add(text, 'size', 1, MAX_SIZE);
-  controller_size.onChange(function(value) {
-      PARTICLE_SIZE = Math.round(value);
-  });
-  var controller_stroke_size = gui.add(text, 'stroke_size', 0, MAX_STROKE_SIZE);
-  controller_stroke_size.onChange(function(value) {
-      STROKE_SIZE = Math.round(value);
-  });
-  var controller_opacity = gui.add(text, 'opacity', 0, 1);
-  controller_opacity.onChange(function(value) {
-      OPACITY = value;
-  });
-  var controller_dead_particle = gui.add(text, 'particle_dead');
-  controller_dead_particle.onChange(function(value){
-       DEAD_PARTICLE = value;
-  });
-  var controller_shadow_blur = gui.add(text, 'shadow_blur', 0,10);
-  controller_shadow_blur.onChange(function(value) {
-      SHADOW_BLUR = Math.round(value);
-  });
+   var controller_type = datGui.add(pGui, 'shape', { Rect: 'rect', Circle: 'circle', Triangle:'triangle'} );
+   controller_type.onChange(function(value){
+      config.shape = value;
+   });
+   var controller_position = datGui.add(pGui, 'position', { Mouse: 'mouse', Center: 'center', Random: 'random'} );
+   controller_position.onChange(function(value){
+      config.position = value;
+   });
 
-  var folder_colors = gui.addFolder("Colors");
-  var controller_color = folder_colors.addColor(text, 'color', COLOR);
-  controller_color.onChange(function(value){
-       COLOR = value;
-  });
-  var controller_color_rand = folder_colors.add(text, 'random_color', { OFF: 0, ON: 1 } );
-  controller_color_rand.onChange(function(value){
-       RANDOM_COLOR = value;
-  });
-  var controller_stroke_color = folder_colors.addColor(text, 'stroke_color', STROKE_COLOR);
-  controller_stroke_color.onChange(function(value){
-       STROKE_COLOR = value;
-  });
-  var controller_back_color = folder_colors.addColor(text, 'backcolor', BACK_COLOR);
-  controller_back_color.onChange(function(value){
-       BACK_COLOR = value;
-  });
+   var controller_size_rand = datGui.add(pGui, 'random_size');
+   controller_size_rand.onChange(function(value){
+      config.random_size = value;
+   });
+   var controller_size = datGui.add(pGui, 'size', 1, MAX_SIZE);
+   controller_size.onChange(function(value) {
+      config.size = Math.round(value);
+   });
+   var controller_stroke_size = datGui.add(pGui, 'stroke_size', 0, MAX_STROKE_SIZE);
+   controller_stroke_size.onChange(function(value) {
+      config.stroke_size = Math.round(value);
+   });
+   var controller_opacity = datGui.add(pGui, 'opacity', 0, 1);
+   controller_opacity.onChange(function(value) {
+      config.opacity = value;
+   });
+   var controller_dead_particle = datGui.add(pGui, 'particle_dead');
+   controller_dead_particle.onChange(function(value){
+      config.particle_dead = value;
+   });
+   var controller_shadow_blur = datGui.add(pGui, 'shadow_blur', 0,10);
+   controller_shadow_blur.onChange(function(value) {
+      config.shadow_blur = Math.round(value);
+   });
 
+   var folder_speeddir = datGui.addFolder("Speed and Direction");
+   var controller_velocity = folder_speeddir.add(pGui, 'velocity', 0, MAX_VELOCITY);
+   controller_velocity.onChange(function(value) {
+      config.velocity = value;
+   });
+   var controller_velocitydeviation = folder_speeddir.add(pGui, 'velocity_deviation', 0, MAX_VELOCITY_DEVIATION);
+   controller_velocitydeviation.onChange(function(value) {
+      config.velocity_deviation = Math.round(value);
+   });
+   var controller_direction = folder_speeddir.add(pGui, 'direction', 0, MAX_DEGREE);
+   controller_direction.onChange(function(value) {
+      config.direction = Math.round(value);
+   });
+   var controller_directiondeviation = folder_speeddir.add(pGui, 'direction_deviation', 0, MAX_DEGREE_DEVIATION);
+   controller_directiondeviation.onChange(function(value) {
+      config.direction_deviation = Math.round(value);
+   });
 
-  gui.add(text, 'Preview');
-  gui.add(text, 'Export');
+   var controller_acceleration = folder_speeddir.add(pGui, 'acceleration', 0.0, MAX_ACCELERATION);
+   controller_acceleration.onChange(function(value) {
+      config.acceleration = value;
+   });
+   var controller_direction_accel = folder_speeddir.add(pGui, 'direction_accel', 0, MAX_DEGREE);
+   controller_direction_accel.onChange(function(value) {
+      config.direction_accel = Math.round(value);
+   });
 
-  init();
+   var folder_colors = datGui.addFolder("Colors");
+   var controller_color = folder_colors.addColor(pGui, 'color', config.color);
+   controller_color.onChange(function(value){
+      config.color = value;
+   });
+   var controller_color_rand = folder_colors.add(pGui, 'random_color', { OFF: 0, ON: 1 } );
+   controller_color_rand.onChange(function(value){
+      config.random_color = value;
+   });
+   var controller_stroke_color = folder_colors.addColor(pGui, 'stroke_color', config.stroke_color);
+   controller_stroke_color.onChange(function(value){
+      config.stroke_color = value;
+   });
+   var controller_back_color = folder_colors.addColor(pGui, 'backcolor', config.back_color);
+   controller_back_color.onChange(function(value){
+      config.back_color = value;
+   });
+
+   datGui.add(pGui, 'Share');
+   datGui.add(pGui, 'Export');
+
+   init();
 
 };
 
@@ -194,10 +201,9 @@ function getMousePos(canvas, evt) {
 }
 
 function createParticle(){
-
   var particle = {};
 
-  switch (POSITION){
+  switch (config.position){
   case 'mouse':
     particle.x = mousePosX;
     particle.y = mousePosY;
@@ -212,22 +218,28 @@ function createParticle(){
     break;
   }
 
-  var direction = randomRange(DIRECTION - DIRECTION_DEVIATION, DIRECTION + DIRECTION_DEVIATION),
-    directionRadians = direction * degreesToRadians,
-    xDir = Math.cos(directionRadians),
-    yDir = Math.sin(directionRadians),
-    velocity = randomRange(VELOCITY, VELOCITY + VELOCITY_DEVIATION);
+  var dirVel = randomRange(config.direction - config.direction_deviation, config.direction + config.direction_deviation),
+    radVel = dirVel * degreesToRadians,
+    xVel = Math.cos(radVel),
+    yVel = Math.sin(radVel),
+    radAccel = config.direction_accel * degreesToRadians,
+    xAccel = config.acceleration * Math.cos(radAccel),
+    yAccel = config.acceleration * Math.sin(radAccel),
+    velocity = randomRange(config.velocity, config.velocity + config.velocity_deviation);
 
-  particle.xSpeed = xDir * velocity;
-  particle.ySpeed = yDir * velocity;
+  particle.xSpeed = xVel * velocity;
+  particle.ySpeed = yVel * velocity;
+  particle.xAccel = xAccel;
+  particle.yAccel = yAccel;
 
   var size;
-  if(RANDOM_SIZE==1){
+  if (config.random_size){
     size = randomRange(1,MAX_SIZE);
   }else{
-    size = PARTICLE_SIZE;
+    size = config.size;
   }
   particle.size  = size;
+  particle.active = true;
 
   return particle;
 }
@@ -252,103 +264,115 @@ function init(){
       mousePosY = mousePos.y;
     }, false);
 
-    generateParticles();
     animate();
 }
 
-function generateParticles(){
-  for (var i = 0; i < MAX_PARTICLES; i++) {
-        particleArray.push(createParticle());
-    }
+function update (particle) {
+   var particle_color = config.color;
+   if (config.random_color){
+      var r = Math.random()*255>>0;
+      var g = Math.random()*255>>0;
+      var b = Math.random()*255>>0;
+      particle_color = "rgba("+r+", "+g+", "+b+", "+config.opacity+")";
+   }else{
+      particle_color = "rgba("+hexToR(particle_color)+", "+hexToG(particle_color)+", "+hexToB(particle_color)+", "+config.opacity+")";
+   }
+
+   c.beginPath();
+
+   c.lineWidth = config.stroke_size;
+   c.fillStyle = particle_color;
+
+   if (config.shadow_blur>0){
+      c.shadowBlur = config.shadow_blur;
+      c.shadowOffsetX = 1;
+      c.shadowOffsetY = 1;
+      c.shadowColor = "rgba(100, 100, 100, 1)";
+   } else {
+      c.shadowBlur = null;
+      c.shadowOffsetX = 0;
+      c.shadowOffsetY = 0;
+      c.shadowColor = "rgba(100, 100, 100, 0)";
+   }
+
+   var particle_stroke_color = "rgba("+hexToR(config.stroke_color)+", "+hexToG(config.stroke_color)+", "+hexToB(config.stroke_color)+", "+config.opacity+")";
+   c.strokeStyle = particle_stroke_color;
+
+   switch (config.shape){
+   case 'rect':
+      c.fillRect(particle.x, particle.y, particle.size, particle.size);
+      if(config.stroke_size>0){
+         c.strokeRect(particle.x, particle.y, particle.size, particle.size);
+      }
+      break;
+
+   case 'circle':
+      var radius = particle.size / 2;
+      c.arc(particle.x, particle.y, radius, 0, 2 * Math.PI);
+      c.fill();
+      if(config.stroke_size>0){
+         c.stroke();
+      }
+      break;
+
+   case 'triangle':
+      c.moveTo(particle.x, particle.y);
+      c.lineTo(particle.x + (particle.size*2) , particle.y);
+      c.lineTo(particle.x + particle.size , particle.y - particle.size);
+      c.lineTo(particle.x, particle.y);
+      c.fill();
+      if(config.stroke_size>0){
+         c.stroke();
+      }
+      break;
+   }
+
+   c.closePath();
+
+   particle.x = particle.x + particle.xSpeed;
+   particle.y = particle.y + particle.ySpeed;
+   particle.xSpeed += particle.xAccel;
+   particle.ySpeed += particle.yAccel;
+
+   if (config.particle_dead) {
+      particle.size = particle.size * (0.9 + (randomRange(1,10)/100));
+      if(particle.size<=0.25){
+         particle.active = false;
+      }
+   } else {
+      if (particle.x < -(particle.size) ||
+         particle.y < -(particle.size) ||
+         particle.x > window.innerWidth+particle.size ||
+         particle.y > window.innerHeight+particle.size){
+         particle.active = false;
+      }
+   }
 }
 
-function draw(){
+function draw () {
+   var particle, i, spawned;
 
-  c.clearRect(0,0,window.innerWidth,window.innerHeight);
-  c.fillStyle = BACK_COLOR;
-  c.fillRect(0,0,window.innerWidth,window.innerHeight);
+   c.clearRect(0,0,window.innerWidth,window.innerHeight);
+   c.fillStyle = config.back_color;
+   c.fillRect(0,0,window.innerWidth,window.innerHeight);
 
-  for(var i=0; i<NOW_PARTICLES;i++){
+   for (i in particleArray) {
+      particle = particleArray[i];
 
-      var particle = particleArray[i];
+      if (particle.active) {
+         update(particle);
+      } else {
+         particleArray.splice(i, 1);
+      }
+   }
 
-      var particle_color = COLOR;
-      if(RANDOM_COLOR==1){
-        var r = Math.random()*255>>0;
-        var g = Math.random()*255>>0;
-        var b = Math.random()*255>>0;
-        particle_color = "rgba("+r+", "+g+", "+b+", "+OPACITY+")";
-      }else{
-        particle_color = "rgba("+hexToR(particle_color)+", "+hexToG(particle_color)+", "+hexToB(particle_color)+", "+OPACITY+")";
+   for (spawned = 0; spawned < config.spawnrate; spawned++) {
+      if (particleArray.length >= config.particles) {
+         return; 
       }
 
-      c.beginPath();
-
-      c.lineWidth = STROKE_SIZE;
-      c.fillStyle = particle_color;
-
-      if(SHADOW_BLUR>0){
-        c.shadowBlur = SHADOW_BLUR;
-        c.shadowOffsetX = 1;
-        c.shadowOffsetY = 1;
-        c.shadowColor = "rgba(100, 100, 100, 1)";
-      }else{
-        c.shadowBlur = null;
-        c.shadowOffsetX = 0;
-        c.shadowOffsetY = 0;
-        c.shadowColor = "rgba(100, 100, 100, 0)";
-      }
-
-      var particle_stroke_color = "rgba("+hexToR(STROKE_COLOR)+", "+hexToG(STROKE_COLOR)+", "+hexToB(STROKE_COLOR)+", "+OPACITY+")";
-      c.strokeStyle = particle_stroke_color;
-
-      switch (TYPE_PARTICLE){
-        case 'rect':
-          c.fillRect(particle.x, particle.y, particle.size, particle.size);
-          if(STROKE_SIZE>0){
-            c.strokeRect(particle.x, particle.y, particle.size, particle.size);
-          }
-          break;
-        case 'circle':
-          var radius = particle.size/2;
-          c.arc(particle.x, particle.y, radius, 0, 2 * Math.PI, false);
-          c.fill();
-          if(STROKE_SIZE>0){
-            c.stroke();
-          }
-          break;
-        case 'triangle':
-          c.moveTo(particle.x, particle.y);
-          c.lineTo(particle.x + (particle.size*2) , particle.y);
-          c.lineTo(particle.x + particle.size , particle.y - particle.size);
-          c.lineTo(particle.x, particle.y);
-          c.fill();
-          if(STROKE_SIZE>0){
-            c.stroke();
-          }
-          break;
-        }
-
-      c.closePath();
-
-      particle.x = particle.x + particle.xSpeed;
-      particle.y = particle.y + particle.ySpeed;
-
-      if(DEAD_PARTICLE==1){
-        particle.size = particle.size * (0.9 + (randomRange(1,10)/100));
-        if(particle.size<=0.25){
-            particleArray[i] = createParticle();
-        }
-      }else{
-        if(particle.x < -(particle.size) ||
-           particle.y < -(particle.size) ||
-           particle.x > window.innerWidth+particle.size ||
-           particle.y > window.innerHeight+particle.size){
-            particleArray[i] = createParticle();
-        }
-
-      }
-  }
+      particleArray.push(createParticle());
+   }
 }
 
 function animate(){
