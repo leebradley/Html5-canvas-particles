@@ -26,13 +26,14 @@ var MAX_STROKE_SIZE = 10;
 var STROKE_SIZE = 0;
 var STROKE_COLOR = '#ffffff';
 var OPACITY = 1;
-var RANDOM_SIZE = 1;
+var RANDOM_SIZE = false;
 var PARTICLE_SIZE = 5;
-var DEAD_PARTICLE = 1;
+var DEAD_PARTICLE = true;
 var SHADOW_BLUR = 0;
 
 var mousePosX = window.innerWidth/2;
 var mousePosY = window.innerHeight/2;
+var degreesToRadians = (Math.PI / 180);
 var stats;
 var canvas;
 var c;
@@ -93,17 +94,10 @@ window.onload = function() {
   var text = new ParticleGUI();
   var gui = new dat.GUI();
   var controller_particules = gui.add(text, 'particles', 1, MAX_PARTICLES);
-  controller_particules.onFinishChange(function(value) {
+  controller_particules.onChange(function(value) {
       NOW_PARTICLES = Math.round(value);
   });
-  var controller_color = gui.addColor(text, 'color', COLOR);
-  controller_color.onChange(function(value){
-       COLOR = value;
-  });
-  var controller_color_rand = gui.add(text, 'random_color', { OFF: 0, ON: 1 } );
-  controller_color_rand.onChange(function(value){
-       RANDOM_COLOR = value;
-  });
+
   var controller_type = gui.add(text, 'type', { Rect: 'rect', Circle: 'circle', Triangle:'triangle'} );
   controller_type.onChange(function(value){
        TYPE_PARTICLE = value;
@@ -112,54 +106,68 @@ window.onload = function() {
   controller_position.onChange(function(value){
        POSITION = value;
   });
-  var controller_velocity = gui.add(text, 'velocity', 0, MAX_VELOCITY);
-  controller_velocity.onFinishChange(function(value) {
+
+  var folder_speeddir = gui.addFolder("Speed and Direction");
+  var controller_velocity = folder_speeddir.add(text, 'velocity', 0, MAX_VELOCITY);
+  controller_velocity.onChange(function(value) {
       VELOCITY = Math.round(value);
   });
-  var controller_velocitydeviation = gui.add(text, 'velocity_deviation', 0, MAX_VELOCITY_DEVIATION);
-  controller_velocitydeviation.onFinishChange(function(value) {
+  var controller_velocitydeviation = folder_speeddir.add(text, 'velocity_deviation', 0, MAX_VELOCITY_DEVIATION);
+  controller_velocitydeviation.onChange(function(value) {
       VELOCITY_DEVIATION = Math.round(value);
   });
-  var controller_direction = gui.add(text, 'direction', 0, MAX_DIRECTION);
-  controller_direction.onFinishChange(function(value) {
+  var controller_direction = folder_speeddir.add(text, 'direction', 0, MAX_DIRECTION);
+  controller_direction.onChange(function(value) {
       DIRECTION = Math.round(value);
   });
-  var controller_directiondeviation = gui.add(text, 'direction_deviation', 0, MAX_DIRECTION_DEVIATION);
-  controller_directiondeviation.onFinishChange(function(value) {
+  var controller_directiondeviation = folder_speeddir.add(text, 'direction_deviation', 0, MAX_DIRECTION_DEVIATION);
+  controller_directiondeviation.onChange(function(value) {
       DIRECTION_DEVIATION = Math.round(value);
   });
-  var controller_back_color = gui.addColor(text, 'backcolor', BACK_COLOR);
-  controller_back_color.onChange(function(value){
-       BACK_COLOR = value;
-  });
-  var controller_size_rand = gui.add(text, 'random_size', { OFF: 0, ON: 1 } );
+
+  var controller_size_rand = gui.add(text, 'random_size');
   controller_size_rand.onChange(function(value){
        RANDOM_SIZE = value;
   });
   var controller_size = gui.add(text, 'size', 1, MAX_SIZE);
-  controller_size.onFinishChange(function(value) {
+  controller_size.onChange(function(value) {
       PARTICLE_SIZE = Math.round(value);
   });
   var controller_stroke_size = gui.add(text, 'stroke_size', 0, MAX_STROKE_SIZE);
-  controller_stroke_size.onFinishChange(function(value) {
+  controller_stroke_size.onChange(function(value) {
       STROKE_SIZE = Math.round(value);
   });
-  var controller_stroke_color = gui.addColor(text, 'stroke_color', STROKE_COLOR);
-  controller_stroke_color.onChange(function(value){
-       STROKE_COLOR = value;
-  });
   var controller_opacity = gui.add(text, 'opacity', 0, 1);
-  controller_opacity.onFinishChange(function(value) {
+  controller_opacity.onChange(function(value) {
       OPACITY = value;
   });
-  var controller_dead_particle = gui.add(text, 'particle_dead', { OFF: 0, ON: 1 } );
+  var controller_dead_particle = gui.add(text, 'particle_dead');
   controller_dead_particle.onChange(function(value){
        DEAD_PARTICLE = value;
   });
   var controller_shadow_blur = gui.add(text, 'shadow_blur', 0,10);
-  controller_shadow_blur.onFinishChange(function(value) {
+  controller_shadow_blur.onChange(function(value) {
       SHADOW_BLUR = Math.round(value);
   });
+
+  var folder_colors = gui.addFolder("Colors");
+  var controller_color = folder_colors.addColor(text, 'color', COLOR);
+  controller_color.onChange(function(value){
+       COLOR = value;
+  });
+  var controller_color_rand = folder_colors.add(text, 'random_color', { OFF: 0, ON: 1 } );
+  controller_color_rand.onChange(function(value){
+       RANDOM_COLOR = value;
+  });
+  var controller_stroke_color = folder_colors.addColor(text, 'stroke_color', STROKE_COLOR);
+  controller_stroke_color.onChange(function(value){
+       STROKE_COLOR = value;
+  });
+  var controller_back_color = folder_colors.addColor(text, 'backcolor', BACK_COLOR);
+  controller_back_color.onChange(function(value){
+       BACK_COLOR = value;
+  });
+
 
   gui.add(text, 'Preview');
   gui.add(text, 'Export');
@@ -204,10 +212,10 @@ function createParticle(){
     break;
   }
 
-  var iDirection = randomRange(DIRECTION - DIRECTION_DEVIATION, DIRECTION + DIRECTION_DEVIATION),
-    degreesToRadians = Math.PI / 180,
-    xDir = Math.cos(iDirection * degreesToRadians),
-    yDir = Math.sin(iDirection * degreesToRadians),
+  var direction = randomRange(DIRECTION - DIRECTION_DEVIATION, DIRECTION + DIRECTION_DEVIATION),
+    directionRadians = direction * degreesToRadians,
+    xDir = Math.cos(directionRadians),
+    yDir = Math.sin(directionRadians),
     velocity = randomRange(VELOCITY, VELOCITY + VELOCITY_DEVIATION);
 
   particle.xSpeed = xDir * velocity;
